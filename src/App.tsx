@@ -477,10 +477,10 @@ export default function App() {
       <div className="fixed w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-3xl -bottom-20 -right-10 pointer-events-none"></div>
 
       {/* Main Glass Card Wrapper */}
-      <div className="w-full max-w-md lg:max-w-4xl landscape:max-w-4xl bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl relative flex flex-col lg:flex-row landscape:flex-row gap-5 lg:gap-8 items-center lg:items-stretch landscape:items-stretch transition-all duration-300">
+      <div className="w-full max-w-md md:max-w-4xl landscape:max-w-4xl bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl relative flex flex-col md:flex-row landscape:flex-row gap-5 md:gap-8 items-center md:items-stretch landscape:items-stretch transition-all duration-300">
         
         {/* Left Column: Control Center */}
-        <div className="w-full flex flex-col gap-4 justify-between lg:w-1/2 landscape:w-1/2">
+        <div className="w-full flex flex-col gap-4 justify-between md:w-1/2 landscape:w-1/2">
           <div className="flex flex-col gap-4">
             {/* Header Title & Audio Control */}
             <div className="flex items-center justify-between">
@@ -583,7 +583,7 @@ export default function App() {
           </div>
 
           {/* Useful Tips for Landscape/Desktop Layout */}
-          <div className="hidden lg:flex landscape:flex flex-col gap-2 p-3 bg-slate-950/40 border border-slate-800/60 rounded-2xl text-xs text-slate-400">
+          <div className="hidden md:flex landscape:flex flex-col gap-2 p-3 bg-slate-950/40 border border-slate-800/60 rounded-2xl text-xs text-slate-400">
             <span className="font-bold text-slate-300 flex items-center gap-1">💡 專業操作秘訣</span>
             <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-400">
               <li>吃掉越多的飼料，蛇身行進的速度會隨之微幅增加！</li>
@@ -595,7 +595,7 @@ export default function App() {
         </div>
 
         {/* Right Column: Active Gameplay Area */}
-        <div className="w-full lg:w-1/2 landscape:w-1/2 flex flex-col gap-4 items-center justify-center">
+        <div className="w-full md:w-1/2 landscape:w-1/2 flex flex-col gap-4 items-center justify-center">
           {/* Gaming Stage Area */}
           <div
             onTouchStart={handleTouchStart}
