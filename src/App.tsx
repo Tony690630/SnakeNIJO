@@ -529,13 +529,13 @@ export default function App() {
   }, [controlMode, difficulty]);
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-white font-sans flex flex-col items-center justify-center pt-4 pb-16 md:py-8 px-3 sm:px-4 overflow-x-hidden select-none touch-none">
+    <div className="min-h-[100dvh] bg-slate-950 text-white font-sans flex flex-col items-center justify-center pt-4 pb-16 md:py-8 px-3 sm:px-4 overflow-x-hidden select-none overflow-y-auto">
       {/* Background Orbs */}
       <div className="fixed w-[300px] h-[300px] rounded-full bg-cyan-500/10 blur-3xl -top-20 -left-10 pointer-events-none"></div>
       <div className="fixed w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-3xl -bottom-20 -right-10 pointer-events-none"></div>
 
       {/* Main Glass Card Wrapper */}
-      <div className="w-full max-w-md md:max-w-4xl landscape:max-w-4xl bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl relative flex flex-col md:flex-row landscape:flex-row gap-5 md:gap-8 items-center md:items-stretch landscape:items-stretch transition-all duration-300">
+      <div className="w-full max-w-md md:max-w-4xl landscape:max-w-4xl bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-4 sm:p-5 md:p-6 shadow-2xl relative flex flex-col md:flex-row landscape:flex-row gap-4 md:gap-8 items-center md:items-stretch landscape:items-stretch transition-all duration-300">
         
         {/* Left Column: Control Center */}
         <div className="w-full flex flex-col gap-4 justify-between md:w-1/2 landscape:w-1/2">
@@ -658,7 +658,7 @@ export default function App() {
           <div
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            className="w-full relative bg-slate-950 p-1.5 border-2 border-slate-800 rounded-3xl shadow-inner shadow-black group overflow-hidden"
+            className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-none relative bg-slate-950 p-1.5 border-2 border-slate-800 rounded-3xl shadow-inner shadow-black group overflow-hidden touch-none"
           >
             <canvas
               ref={canvasRef}
@@ -696,9 +696,9 @@ export default function App() {
           </div>
 
           {/* Interactive Controller Boards */}
-          <div className="h-44 w-full flex items-center justify-center relative">
+          <div className="h-44 w-full flex items-center justify-center relative touch-none">
             {controlMode === 'buttons' && (
-              <div className="grid grid-cols-3 grid-rows-3 gap-2 w-48 mx-auto">
+              <div className="grid grid-cols-3 grid-rows-3 gap-2 w-48 mx-auto touch-none">
                 {/* Row 1 */}
                 <div></div>
                 <button
