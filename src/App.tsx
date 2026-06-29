@@ -47,6 +47,9 @@ export default function App() {
   const turnLockRef = useRef<boolean>(false);
   const gameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpeedRef = useRef<string>('0.0');
+  const previousSnakeRef = useRef<Position[]>([{ x: 10, y: 10 }]);
+  const lastTickTimeRef = useRef<number>(performance.now());
+  const tickDurationRef = useRef<number>(200);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -107,14 +110,12 @@ export default function App() {
     ctx.closePath();
   };
 
-  const draw = () => {
+  const gameTick = () => {
     if (isPausedRef.current || isDeadRef.current) return;
     turnLockRef.current = false;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    // Save previous state for interpolation
+    previousSnakeRef.current = snakeRef.current.map(s => ({ ...s }));
 
     let head = {
       x: snakeRef.current[0].x + dxRef.current,
@@ -157,116 +158,165 @@ export default function App() {
       }
     }
 
-    // --- Render Canvas Graphics ---
-    // Background Dark Slate
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, 400, 400);
-
-    // Grid lines for premium gaming vibe
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i < 20; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * box, 0);
-      ctx.lineTo(i * box, 400);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(0, i * box);
-      ctx.lineTo(400, i * box);
-      ctx.stroke();
-    }
-
-    // Draw Foods
-    foodsRef.current.forEach(food => {
-      const centerX = food.x * box + box / 2;
-      const centerY = food.y * box + box / 2;
-      const radius = box / 2 - 1.5;
-
-      const grad = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, radius);
-      grad.addColorStop(0, '#f43f5e'); // Rose-500
-      grad.addColorStop(1, '#9f1239'); // Rose-800
-
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Highlight sheen
-      ctx.fillStyle = '#ffe4e6';
-      ctx.beginPath();
-      ctx.arc(centerX - 2, centerY - 2, 2, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    // Draw Snake
-    snakeRef.current.forEach((segment, index) => {
-      const isHead = index === 0;
-      const pad = 1.5;
-      const x = segment.x * box + pad;
-      const y = segment.y * box + pad;
-      const size = box - pad * 2;
-
-      if (isHead) {
-        const grad = ctx.createLinearGradient(x, y, x + size, y + size);
-        grad.addColorStop(0, '#10b981'); // Emerald 500
-        grad.addColorStop(1, '#059669'); // Emerald 600
-        ctx.fillStyle = grad;
-      } else {
-        const grad = ctx.createLinearGradient(x, y, x + size, y + size);
-        grad.addColorStop(0, '#06b6d4'); // Cyan 500
-        grad.addColorStop(1, '#0891b2'); // Cyan 600
-        ctx.fillStyle = grad;
-      }
-
-      drawRoundedRect(ctx, x, y, size, size, 5);
-      ctx.fill();
-
-      // Eyes on head
-      if (isHead) {
-        ctx.fillStyle = '#ffffff';
-        let eye1 = { x: 0, y: 0 };
-        let eye2 = { x: 0, y: 0 };
-
-        if (dxRef.current === 0 && dyRef.current === -1) {
-          // UP
-          eye1 = { x: x + 4, y: y + 4 };
-          eye2 = { x: x + size - 6, y: y + 4 };
-        } else if (dxRef.current === 0 && dyRef.current === 1) {
-          // DOWN
-          eye1 = { x: x + 4, y: y + size - 6 };
-          eye2 = { x: x + size - 6, y: y + size - 6 };
-        } else if (dxRef.current === -1 && dyRef.current === 0) {
-          // LEFT
-          eye1 = { x: x + 4, y: y + 4 };
-          eye2 = { x: x + 4, y: y + size - 6 };
-        } else {
-          // RIGHT / Default
-          eye1 = { x: x + size - 6, y: y + 4 };
-          eye2 = { x: x + size - 6, y: y + size - 6 };
-        }
-
-        ctx.beginPath();
-        ctx.arc(eye1.x, eye1.y, 2.5, 0, Math.PI * 2);
-        ctx.arc(eye2.x, eye2.y, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(eye1.x, eye1.y, 1, 0, Math.PI * 2);
-        ctx.arc(eye2.x, eye2.y, 1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    });
-
+    lastTickTimeRef.current = performance.now();
     const speedInfo = getSpeedInfo();
+    tickDurationRef.current = speedInfo.interval;
+
     if (lastSpeedRef.current !== speedInfo.formattedSpeed) {
       lastSpeedRef.current = speedInfo.formattedSpeed;
       setSpeedState(speedInfo.formattedSpeed);
     }
 
-    gameTimeoutRef.current = setTimeout(draw, speedInfo.interval);
+    gameTimeoutRef.current = setTimeout(gameTick, speedInfo.interval);
   };
+
+  // --- High-FPS Smooth Render Loop ---
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const render = (time: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
+      // 1. Draw Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 400, 400);
+
+      // 2. Draw Grid lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 20; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * box, 0);
+        ctx.lineTo(i * box, 400);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * box);
+        ctx.lineTo(400, i * box);
+        ctx.stroke();
+      }
+
+      // 3. Draw Foods
+      foodsRef.current.forEach(food => {
+        const centerX = food.x * box + box / 2;
+        const centerY = food.y * box + box / 2;
+        const radius = box / 2 - 1.5;
+
+        const grad = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, radius);
+        grad.addColorStop(0, '#f43f5e'); // Rose-500
+        grad.addColorStop(1, '#9f1239'); // Rose-800
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Highlight sheen
+        ctx.fillStyle = '#ffe4e6';
+        ctx.beginPath();
+        ctx.arc(centerX - 2, centerY - 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 4. Calculate interpolation progress (0 to 1)
+      let progress = 1;
+      if (hasStarted && !isPausedRef.current && !isDeadRef.current) {
+        if (dxRef.current !== 0 || dyRef.current !== 0) {
+          const elapsed = time - lastTickTimeRef.current;
+          progress = Math.min(elapsed / tickDurationRef.current, 1);
+        }
+      }
+
+      // 5. Draw Snake with smooth interpolation
+      snakeRef.current.forEach((segment, index) => {
+        const isHead = index === 0;
+        const pad = 1.5;
+
+        // Fetch corresponding previous segment
+        let prevSegment = previousSnakeRef.current[index];
+        if (!prevSegment) {
+          // If snake grew, start interpolation from previous tail segment
+          prevSegment = previousSnakeRef.current[previousSnakeRef.current.length - 1] || segment;
+        }
+
+        // Interpolate grid coordinate
+        const interpX = prevSegment.x + (segment.x - prevSegment.x) * progress;
+        const interpY = prevSegment.y + (segment.y - prevSegment.y) * progress;
+
+        const x = interpX * box + pad;
+        const y = interpY * box + pad;
+        const size = box - pad * 2;
+
+        if (isHead) {
+          const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+          grad.addColorStop(0, '#10b981'); // Emerald 500
+          grad.addColorStop(1, '#059669'); // Emerald 600
+          ctx.fillStyle = grad;
+        } else {
+          const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+          grad.addColorStop(0, '#06b6d4'); // Cyan 500
+          grad.addColorStop(1, '#0891b2'); // Cyan 600
+          ctx.fillStyle = grad;
+        }
+
+        drawRoundedRect(ctx, x, y, size, size, 5);
+        ctx.fill();
+
+        // Eyes on head
+        if (isHead) {
+          ctx.fillStyle = '#ffffff';
+          let eye1 = { x: 0, y: 0 };
+          let eye2 = { x: 0, y: 0 };
+
+          if (dxRef.current === 0 && dyRef.current === -1) {
+            // UP
+            eye1 = { x: x + 4, y: y + 4 };
+            eye2 = { x: x + size - 6, y: y + 4 };
+          } else if (dxRef.current === 0 && dyRef.current === 1) {
+            // DOWN
+            eye1 = { x: x + 4, y: y + size - 6 };
+            eye2 = { x: x + size - 6, y: y + size - 6 };
+          } else if (dxRef.current === -1 && dyRef.current === 0) {
+            // LEFT
+            eye1 = { x: x + 4, y: y + 4 };
+            eye2 = { x: x + 4, y: y + size - 6 };
+          } else {
+            // RIGHT / Default
+            eye1 = { x: x + size - 6, y: y + 4 };
+            eye2 = { x: x + size - 6, y: y + size - 6 };
+          }
+
+          ctx.beginPath();
+          ctx.arc(eye1.x, eye1.y, 2.5, 0, Math.PI * 2);
+          ctx.arc(eye2.x, eye2.y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(eye1.x, eye1.y, 1, 0, Math.PI * 2);
+          ctx.arc(eye2.x, eye2.y, 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    animationFrameId = requestAnimationFrame(render);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [hasStarted]);
 
   // --- Control Trigger ---
   const moveSnake = (direction: 'up' | 'down' | 'left' | 'right') => {
@@ -308,7 +358,7 @@ export default function App() {
       isPausedRef.current = false;
       setIsPausedState(false);
       const speedInfo = getSpeedInfo();
-      gameTimeoutRef.current = setTimeout(draw, speedInfo.interval);
+      gameTimeoutRef.current = setTimeout(gameTick, speedInfo.interval);
     } else {
       isPausedRef.current = true;
       setIsPausedState(true);
@@ -340,6 +390,8 @@ export default function App() {
       setLivesState(livesRef.current);
 
       snakeRef.current = [{ x: 10, y: 10 }];
+      previousSnakeRef.current = [{ x: 10, y: 10 }];
+      lastTickTimeRef.current = performance.now();
       dxRef.current = 0;
       dyRef.current = 0;
       turnLockRef.current = false;
@@ -352,12 +404,14 @@ export default function App() {
       playSound('click');
 
       const speedInfo = getSpeedInfo();
-      gameTimeoutRef.current = setTimeout(draw, speedInfo.interval);
+      gameTimeoutRef.current = setTimeout(gameTick, speedInfo.interval);
     }
   };
 
   const handleRestart = () => {
     snakeRef.current = [{ x: 10, y: 10 }];
+    previousSnakeRef.current = [{ x: 10, y: 10 }];
+    lastTickTimeRef.current = performance.now();
     dxRef.current = 0;
     dyRef.current = 0;
     scoreRef.current = 0;
@@ -380,7 +434,7 @@ export default function App() {
       clearTimeout(gameTimeoutRef.current);
     }
     const speedInfo = getSpeedInfo();
-    gameTimeoutRef.current = setTimeout(draw, speedInfo.interval);
+    gameTimeoutRef.current = setTimeout(gameTick, speedInfo.interval);
   };
 
   // --- Setting Hooks ---
@@ -395,7 +449,7 @@ export default function App() {
         clearTimeout(gameTimeoutRef.current);
       }
       const speedInfo = getSpeedInfo();
-      gameTimeoutRef.current = setTimeout(draw, speedInfo.interval);
+      gameTimeoutRef.current = setTimeout(gameTick, speedInfo.interval);
     }
   };
 
