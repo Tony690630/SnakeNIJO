@@ -1,0 +1,6 @@
+{
+  "name": "多功能極簡貪食蛇",
+  "description": "一款支援虛擬按鍵、螢幕滑動與虛擬搖桿等多元控制方式的精緻極簡貪食蛇遊戲，配有音效系統、難度調整與生命復活機制。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
