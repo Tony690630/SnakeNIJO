@@ -471,230 +471,251 @@ export default function App() {
   }, [controlMode, difficulty]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col items-center justify-center p-4 overflow-x-hidden select-none touch-none">
+    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col items-center justify-center p-3 sm:p-4 overflow-x-hidden select-none touch-none">
       {/* Background Orbs */}
       <div className="fixed w-[300px] h-[300px] rounded-full bg-cyan-500/10 blur-3xl -top-20 -left-10 pointer-events-none"></div>
       <div className="fixed w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-3xl -bottom-20 -right-10 pointer-events-none"></div>
 
       {/* Main Glass Card Wrapper */}
-      <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-2xl relative flex flex-col gap-4">
-        {/* Header Title & Audio Control */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Sparkles className="w-4 h-4 text-slate-950 animate-pulse" />
+      <div className="w-full max-w-md lg:max-w-4xl landscape:max-w-4xl bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl relative flex flex-col lg:flex-row landscape:flex-row gap-5 lg:gap-8 items-center lg:items-stretch landscape:items-stretch transition-all duration-300">
+        
+        {/* Left Column: Control Center */}
+        <div className="w-full flex flex-col gap-4 justify-between lg:w-1/2 landscape:w-1/2">
+          <div className="flex flex-col gap-4">
+            {/* Header Title & Audio Control */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  <Sparkles className="w-4 h-4 text-slate-950 animate-pulse" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-black tracking-tight text-white">多功能極簡貪食蛇</h1>
+                  <p className="text-[10px] text-slate-400 font-medium">多模式操作自選版</p>
+                </div>
+              </div>
+
+              <button
+                id="btn-mute-toggle"
+                onClick={handleMuteToggle}
+                className="p-2 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 rounded-xl border border-slate-700/50 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
+                title={isMuted ? '取消靜音' : '靜音'}
+              >
+                {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+              </button>
             </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-white">多功能極簡貪食蛇</h1>
-              <p className="text-[10px] text-slate-400 font-medium">多模式操作自選版</p>
+
+            {/* Dynamic Statistics Display */}
+            <ScoreBoard
+              score={scoreState}
+              highScore={highScoreState}
+              length={lengthState}
+              speed={speedState}
+              lives={livesState}
+            />
+
+            {/* Settings Selectors & Main Controls */}
+            <div className="grid grid-cols-3 gap-2 items-center">
+              {/* Controls Selector */}
+              <div className="flex flex-col gap-1 col-span-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                  <Gamepad2 className="w-3 h-3 text-cyan-400" /> 操作
+                </label>
+                <select
+                  id="select-ctrl-mode"
+                  value={controlMode}
+                  onChange={(e) => {
+                    playSound('click');
+                    setControlMode(e.target.value as ControlMode);
+                  }}
+                  className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs font-bold text-slate-200 outline-none cursor-pointer focus:ring-1 focus:ring-cyan-500"
+                >
+                  <option value="buttons">🎮 虛擬按鍵</option>
+                  <option value="swipe">📱 螢幕滑動</option>
+                  <option value="joystick">🕹️ 虛擬搖桿</option>
+                </select>
+              </div>
+
+              {/* Difficulty Selector */}
+              <div className="flex flex-col gap-1 col-span-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                  <Sliders className="w-3 h-3 text-indigo-400" /> 等級
+                </label>
+                <select
+                  id="select-difficulty"
+                  value={difficulty}
+                  onChange={handleDifficultyChange}
+                  className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs font-bold text-slate-200 outline-none cursor-pointer focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="1">等級 1 (慢速)</option>
+                  <option value="2">等級 2 (輕鬆)</option>
+                  <option value="3">等級 3 (標準)</option>
+                  <option value="4">等級 4 (快速)</option>
+                  <option value="5">等級 5 (極速)</option>
+                </select>
+              </div>
+
+              {/* Pause / Play Trigger Button */}
+              <div className="flex flex-col justify-end h-full">
+                <button
+                  id="btn-pause-play"
+                  onClick={togglePause}
+                  disabled={isDeadState}
+                  className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 border transition-all active:scale-95 shadow-md ${
+                    isPausedState
+                      ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30 shadow-emerald-500/5'
+                      : 'bg-rose-600/20 text-rose-400 border-rose-500/30 hover:bg-rose-600/30 shadow-rose-500/5'
+                  }`}
+                >
+                  {isPausedState ? (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>繼續</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="w-3.5 h-3.5 fill-current" />
+                      <span>暫停</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
-          <button
-            id="btn-mute-toggle"
-            onClick={handleMuteToggle}
-            className="p-2 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 rounded-xl border border-slate-700/50 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
-            title={isMuted ? '取消靜音' : '靜音'}
+          {/* Useful Tips for Landscape/Desktop Layout */}
+          <div className="hidden lg:flex landscape:flex flex-col gap-2 p-3 bg-slate-950/40 border border-slate-800/60 rounded-2xl text-xs text-slate-400">
+            <span className="font-bold text-slate-300 flex items-center gap-1">💡 專業操作秘訣</span>
+            <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-400">
+              <li>吃掉越多的飼料，蛇身行進的速度會隨之微幅增加！</li>
+              <li>支援電腦鍵盤，使用 <kbd className="bg-slate-800 px-1 rounded text-cyan-400 border border-slate-700 font-mono text-[9px]">W A S D</kbd> 或方向鍵操作。</li>
+              <li>按下 <kbd className="bg-slate-800 px-1 rounded text-indigo-400 border border-slate-700 font-mono text-[9px]">Space 空白鍵</kbd> 或 <kbd className="bg-slate-800 px-1 rounded text-indigo-400 border border-slate-700 font-mono text-[9px]">P</kbd> 可以隨時暫停。</li>
+              <li>生命值大於 0 時，撞壁或自撞皆可消耗生命「原位復活」！</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Right Column: Active Gameplay Area */}
+        <div className="w-full lg:w-1/2 landscape:w-1/2 flex flex-col gap-4 items-center justify-center">
+          {/* Gaming Stage Area */}
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="w-full relative bg-slate-950 p-1.5 border-2 border-slate-800 rounded-3xl shadow-inner shadow-black group overflow-hidden"
           >
-            {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-          </button>
-        </div>
+            <canvas
+              ref={canvasRef}
+              width="400"
+              height="400"
+              className="w-full aspect-square rounded-2xl block border border-slate-900/50"
+            />
 
-        {/* Dynamic Statistics Display */}
-        <ScoreBoard
-          score={scoreState}
-          highScore={highScoreState}
-          length={lengthState}
-          speed={speedState}
-          lives={livesState}
-        />
-
-        {/* Settings Selectors & Main Controls */}
-        <div className="grid grid-cols-3 gap-2 items-center">
-          {/* Controls Selector */}
-          <div className="flex flex-col gap-1 col-span-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <Gamepad2 className="w-3 h-3 text-cyan-400" /> 操作
-            </label>
-            <select
-              id="select-ctrl-mode"
-              value={controlMode}
-              onChange={(e) => {
-                playSound('click');
-                setControlMode(e.target.value as ControlMode);
-              }}
-              className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs font-bold text-slate-200 outline-none cursor-pointer focus:ring-1 focus:ring-cyan-500"
-            >
-              <option value="buttons">🎮 虛擬按鍵</option>
-              <option value="swipe">📱 螢幕滑動</option>
-              <option value="joystick">🕹️ 虛擬搖桿</option>
-            </select>
-          </div>
-
-          {/* Difficulty Selector */}
-          <div className="flex flex-col gap-1 col-span-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <Sliders className="w-3 h-3 text-indigo-400" /> 等級
-            </label>
-            <select
-              id="select-difficulty"
-              value={difficulty}
-              onChange={handleDifficultyChange}
-              className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs font-bold text-slate-200 outline-none cursor-pointer focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="1">等級 1 (慢速)</option>
-              <option value="2">等級 2 (輕鬆)</option>
-              <option value="3">等級 3 (標準)</option>
-              <option value="4">等級 4 (快速)</option>
-              <option value="5">等級 5 (極速)</option>
-            </select>
-          </div>
-
-          {/* Pause / Play Trigger Button */}
-          <div className="flex flex-col justify-end h-full">
-            <button
-              id="btn-pause-play"
-              onClick={togglePause}
-              disabled={isDeadState}
-              className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 border transition-all active:scale-95 shadow-md ${
-                isPausedState
-                  ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30 shadow-emerald-500/5'
-                  : 'bg-rose-600/20 text-rose-400 border-rose-500/30 hover:bg-rose-600/30 shadow-rose-500/5'
-              }`}
-            >
-              {isPausedState ? (
-                <>
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>繼續</span>
-                </>
-              ) : (
-                <>
-                  <Pause className="w-3.5 h-3.5 fill-current" />
-                  <span>暫停</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Gaming Stage Area */}
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          className="relative bg-slate-950 p-1.5 border-2 border-slate-800 rounded-3xl shadow-inner shadow-black group overflow-hidden"
-        >
-          <canvas
-            ref={canvasRef}
-            width="400"
-            height="400"
-            className="w-full aspect-square rounded-2xl block border border-slate-900/50"
-          />
-
-          {/* Start Guide Overlay */}
-          {!hasStarted && !isDeadState && !isPausedState && (
-            <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4 text-center rounded-2xl">
-              <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-full flex items-center justify-center text-cyan-400 animate-bounce">
-                <Gamepad2 className="w-6 h-6" />
+            {/* Start Guide Overlay */}
+            {!hasStarted && !isDeadState && !isPausedState && (
+              <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4 text-center rounded-2xl">
+                <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-full flex items-center justify-center text-cyan-400 animate-bounce">
+                  <Gamepad2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-white">準備開始挑戰</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-[240px]">
+                    {controlMode === 'swipe'
+                      ? '在螢幕上往上下左右滑動以朝對應方向出發！'
+                      : '按下方向鍵、WASD，或下方的控制器按鍵開始移動！'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-black text-lg text-white">準備開始挑戰</h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-[240px]">
-                  {controlMode === 'swipe'
-                    ? '在螢幕上往上下左右滑動以朝對應方向出發！'
-                    : '按下方向鍵、WASD，或下方的控制器按鍵開始移動！'}
-                </p>
+            )}
+
+            {/* Paused Overlay */}
+            {isPausedState && !isDeadState && (
+              <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center gap-2 rounded-2xl">
+                <span className="p-3 bg-indigo-500/10 rounded-full border border-indigo-500/30 text-indigo-400 animate-pulse">
+                  <Pause className="w-6 h-6 fill-current" />
+                </span>
+                <h3 className="font-black text-base tracking-widest text-indigo-400">遊戲暫停中</h3>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Paused Overlay */}
-          {isPausedState && !isDeadState && (
-            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center gap-2 rounded-2xl">
-              <span className="p-3 bg-indigo-500/10 rounded-full border border-indigo-500/30 text-indigo-400 animate-pulse">
-                <Pause className="w-6 h-6 fill-current" />
-              </span>
-              <h3 className="font-black text-base tracking-widest text-indigo-400">遊戲暫停中</h3>
-            </div>
-          )}
+          {/* Interactive Controller Boards */}
+          <div className="h-44 w-full flex items-center justify-center relative">
+            {controlMode === 'buttons' && (
+              <div className="grid grid-cols-3 grid-rows-3 gap-2 w-48 mx-auto">
+                {/* Row 1 */}
+                <div></div>
+                <button
+                  id="btn-move-up"
+                  onClick={() => moveSnake('up')}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    moveSnake('up');
+                  }}
+                  className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
+                  title="向上"
+                >
+                  <ChevronUp className="w-6 h-6" />
+                </button>
+                <div></div>
+
+                {/* Row 2 */}
+                <button
+                  id="btn-move-left"
+                  onClick={() => moveSnake('left')}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    moveSnake('left');
+                  }}
+                  className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
+                  title="向左"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  id="btn-move-down"
+                  onClick={() => moveSnake('down')}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    moveSnake('down');
+                  }}
+                  className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
+                  title="向下"
+                >
+                  <ChevronDown className="w-6 h-6" />
+                </button>
+                <button
+                  id="btn-move-right"
+                  onClick={() => moveSnake('right')}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    moveSnake('right');
+                  }}
+                  className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
+                  title="向右"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+
+                {/* Row 3 */}
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            )}
+
+            {controlMode === 'swipe' && (
+              <div className="text-slate-400 text-xs text-center border border-dashed border-slate-800 p-4 rounded-2xl max-w-sm mx-auto flex flex-col items-center gap-2 bg-slate-900/20">
+                <Move className="w-6 h-6 text-cyan-400 animate-pulse" />
+                <span>📱 請在上方「遊戲畫面上滑動」控制方向</span>
+                <span className="text-[10px] text-slate-500">(支援全螢幕/鍵盤 Arrow 與 WASD 操控)</span>
+              </div>
+            )}
+
+            {controlMode === 'joystick' && (
+              <Joystick onMove={moveSnake} active={!isPausedState && !isDeadState} />
+            )}
+          </div>
         </div>
 
-        {/* Interactive Controller Boards */}
-        <div className="h-44 flex items-center justify-center relative">
-          {controlMode === 'buttons' && (
-            <div className="grid grid-cols-3 grid-rows-3 gap-2 w-48 mx-auto">
-              {/* Row 1 */}
-              <div></div>
-              <button
-                id="btn-move-up"
-                onClick={() => moveSnake('up')}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  moveSnake('up');
-                }}
-                className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
-                title="向上"
-              >
-                <ChevronUp className="w-6 h-6" />
-              </button>
-              <div></div>
-
-              {/* Row 2 */}
-              <button
-                id="btn-move-left"
-                onClick={() => moveSnake('left')}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  moveSnake('left');
-                }}
-                className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
-                title="向左"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <button
-                id="btn-move-down"
-                onClick={() => moveSnake('down')}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  moveSnake('down');
-                }}
-                className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
-                title="向下"
-              >
-                <ChevronDown className="w-6 h-6" />
-              </button>
-              <button
-                id="btn-move-right"
-                onClick={() => moveSnake('right')}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  moveSnake('right');
-                }}
-                className="w-14 h-14 bg-indigo-600/95 active:bg-indigo-500 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg active:translate-y-0.5 transition-all active:shadow-sm shadow-indigo-900/30 border border-indigo-500/30 cursor-pointer"
-                title="向右"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-
-              {/* Row 3 */}
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-          )}
-
-          {controlMode === 'swipe' && (
-            <div className="text-slate-400 text-xs text-center border border-dashed border-slate-800 p-4 rounded-2xl max-w-sm mx-auto flex flex-col items-center gap-2 bg-slate-900/20">
-              <Move className="w-6 h-6 text-cyan-400 animate-pulse" />
-              <span>📱 請在上方「遊戲畫面上滑動」控制方向</span>
-              <span className="text-[10px] text-slate-500">(支援全螢幕/鍵盤 Arrow 與 WASD 操控)</span>
-            </div>
-          )}
-
-          {controlMode === 'joystick' && (
-            <Joystick onMove={moveSnake} active={!isPausedState && !isDeadState} />
-          )}
-        </div>
       </div>
 
       {/* Popups & Dialogs overlay */}
