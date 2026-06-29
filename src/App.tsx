@@ -46,6 +46,7 @@ export default function App() {
   const isDeadRef = useRef<boolean>(false);
   const turnLockRef = useRef<boolean>(false);
   const gameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSpeedRef = useRef<string>('0.0');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -259,7 +260,10 @@ export default function App() {
     });
 
     const speedInfo = getSpeedInfo();
-    setSpeedState(speedInfo.formattedSpeed);
+    if (lastSpeedRef.current !== speedInfo.formattedSpeed) {
+      lastSpeedRef.current = speedInfo.formattedSpeed;
+      setSpeedState(speedInfo.formattedSpeed);
+    }
 
     gameTimeoutRef.current = setTimeout(draw, speedInfo.interval);
   };
@@ -471,7 +475,7 @@ export default function App() {
   }, [controlMode, difficulty]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col items-center justify-center p-3 sm:p-4 overflow-x-hidden select-none touch-none">
+    <div className="min-h-[100dvh] bg-slate-950 text-white font-sans flex flex-col items-center justify-center pt-4 pb-16 md:py-8 px-3 sm:px-4 overflow-x-hidden select-none touch-none">
       {/* Background Orbs */}
       <div className="fixed w-[300px] h-[300px] rounded-full bg-cyan-500/10 blur-3xl -top-20 -left-10 pointer-events-none"></div>
       <div className="fixed w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-3xl -bottom-20 -right-10 pointer-events-none"></div>
