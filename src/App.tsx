@@ -529,7 +529,7 @@ export default function App() {
   }, [controlMode, difficulty]);
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-white font-sans flex flex-col items-center justify-center pt-4 pb-16 md:py-8 px-3 sm:px-4 overflow-x-hidden select-none overflow-y-auto">
+    <div className="min-h-[100dvh] bg-slate-950 text-white font-sans flex flex-col items-center justify-start md:justify-center pt-4 pb-32 md:py-8 px-3 sm:px-4 overflow-x-hidden select-none overflow-y-auto">
       {/* Background Orbs */}
       <div className="fixed w-[300px] h-[300px] rounded-full bg-cyan-500/10 blur-3xl -top-20 -left-10 pointer-events-none"></div>
       <div className="fixed w-[300px] h-[300px] rounded-full bg-indigo-500/10 blur-3xl -bottom-20 -right-10 pointer-events-none"></div>
@@ -696,9 +696,9 @@ export default function App() {
           </div>
 
           {/* Interactive Controller Boards */}
-          <div className="h-44 w-full flex items-center justify-center relative touch-none">
+          <div className="min-h-[120px] w-full flex items-center justify-center relative touch-none">
             {controlMode === 'buttons' && (
-              <div className="grid grid-cols-3 grid-rows-3 gap-2 w-48 mx-auto touch-none">
+              <div className="grid grid-cols-3 gap-2 w-48 mx-auto touch-none">
                 {/* Row 1 */}
                 <div></div>
                 <button
@@ -752,11 +752,6 @@ export default function App() {
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
-
-                {/* Row 3 */}
-                <div></div>
-                <div></div>
-                <div></div>
               </div>
             )}
 
